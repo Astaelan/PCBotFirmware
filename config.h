@@ -37,7 +37,7 @@
 
 
 // Default settings. Used when resetting EEPROM. Change to desired name in defaults.h
-#define DEFAULTS_CYCLONE_2_1
+#define DEFAULTS_PCBOT
 
 // Serial baud rate
 #define BAUD_RATE 115200
@@ -168,8 +168,21 @@
 // equally divided voltage bins between the maximum and minimum spindle speeds. So for a 5V pin, 1000
 // max rpm, and 250 min rpm, the spindle output voltage would be set for the following "S" commands: 
 // "S1000" @ 5V, "S250" @ 0.02V, and "S625" @ 2.5V (mid-range). The pin outputs 0V when disabled.
-#define SPINDLE_MAX_RPM 1000.0 // Max spindle RPM. This value is equal to 100% duty cycle on the PWM.
+#define SPINDLE_MAX_RPM 12000.0 // Max spindle RPM. This value is equal to 100% duty cycle on the PWM.
 #define SPINDLE_MIN_RPM 0.0    // Min spindle RPM. This value is equal to (1/256) duty cycle on the PWM.
+
+// Enables external PWM soft start controller which utilizes 3 wire interface and 10 stage ramping as follows:
+// Ramping UP or DOWN increments acceleration by 10% duty cycle per step, upto 10 stages in either direction
+// Steps utilize SPINDLE_MAX_RPM, but does NOT use VARIABLE_SPINDLE internal PWM
+// Decellerating to 0% duty cycle artificially stops the controller without using STOP
+// STOP is sampled on rising edge, hard stopping from running state requires pulsing LOW and HIGH, then holding LOW
+// STOP being held LOW after a rising edge sample causes acceleration steps to be completely ignored
+// STOP must be held HIGH to enable acceleration steps
+// Controller introduces soft starting delays even with 100ms pulsing
+// STOP (D4) = HIGH Normal, LOW 100ms pulse to stop and reset to zero motion, or hold LOW to disable accelerations
+// UP (D5) = HIGH Normal, LOW 100ms pulse to accelerate forward (or decellerate moving backward)
+// DOWN (D6) = HIGH Normal, LOW 100ms pulse to accelerate backward (or decellerate moving forward)
+#define SPINDLE_Y3675
 
 // Minimum planner junction speed. Sets the default minimum junction speed the planner plans to at
 // every buffer block junction, except for starting from rest and end of the buffer, which are always

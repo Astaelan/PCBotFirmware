@@ -333,7 +333,7 @@
 
 // Define probe switch input pin.
 #define PROBE_DDR       DDRK
-#define PROBE_PIN       PINK
+//#define PROBE_PIN       PINK
 #define PROBE_PORT      PORTK
 #define PROBE_BIT       3  // MEGA2560 Analog Pin 11
 #define PROBE_MASK      (1<<PROBE_BIT)
@@ -369,17 +369,33 @@
 #define X_DIR_PIN          55 //PF1 ( ADC1 )
 #define X_ENABLE_PIN       38 //PD7 ( T0 )
 
-#define Y_STEP_PIN         60 //PF6 ( ADC6 )
-#define Y_DIR_PIN          61 //PF7 ( ADC7 )
-#define Y_ENABLE_PIN       56 //PF2 ( ADC2 )
+// Y and Z swapped for PCBot
 
-#define Z_STEP_PIN         46 //PL3 ( OC5A )
-#define Z_DIR_PIN          48 //PL1 ( ICP5 )
-#define Z_ENABLE_PIN       62 //PK0 ( ADC8/PCINT16 )
+#define Y_STEP_PIN         46 //PL3 ( OC5A )
+#define Y_DIR_PIN          48 //PL1 ( ICP5 )
+#define Y_ENABLE_PIN       62 //PK0 ( ADC8/PCINT16 )
+
+#define Z_STEP_PIN         60 //PF6 ( ADC6 )
+#define Z_DIR_PIN          61 //PF7 ( ADC7 )
+#define Z_ENABLE_PIN       56 //PF2 ( ADC2 )
+
+//#define Y_STEP_PIN         60 //PF6 ( ADC6 )
+//#define Y_DIR_PIN          61 //PF7 ( ADC7 )
+//#define Y_ENABLE_PIN       56 //PF2 ( ADC2 )
+
+//#define Z_STEP_PIN         46 //PL3 ( OC5A )
+//#define Z_DIR_PIN          48 //PL1 ( ICP5 )
+//#define Z_ENABLE_PIN       62 //PK0 ( ADC8/PCINT16 )
 
 #define SPINDLE_ENABLE_PIN 10
 #define SPINDLE_DIRECTION_PIN 9
 #define COOLANT_FLOOD_PIN 8
+
+#ifdef SPINDLE_Y3675
+#define SPINDLE_STOP_PIN  4
+#define SPINDLE_UP_PIN    5
+#define SPINDLE_DOWN_PIN  6
+#endif
 
 #endif
 

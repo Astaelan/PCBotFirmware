@@ -15,6 +15,7 @@ extern "C" {
 #include"cpu_map.h"
 #include<stdint.h>
 #include"fastio.h"
+#include"gcode.h"
 
 #define CHECK(var,pos) ((var) & (1<<(pos)))
 
@@ -24,12 +25,17 @@ extern "C" {
     extern void rampsWriteDisable(uint8_t value);
     extern void rampsWriteSteps(uint8_t value);
     extern void rampsWriteDirections(uint8_t value);
-    extern void rampsStartSpindle();
+    extern void rampsStartSpindle(uint8_t direction, float rpm);
     extern void rampsStopSpindle();
     extern void rampsLeftSpindle();
     extern void rampsRightSpindle();
     extern void rampsCoolantOn();
     extern void rampsCoolantOff();
+
+#ifdef SPINDLE_Y3675
+    uint8_t spindleDirection = SPINDLE_ENABLE_CW;
+    uint8_t spindleDuty = 0;
+#endif
 
     inline void rampsCoolantOn() {
         WRITE(COOLANT_FLOOD_PIN, 1);
@@ -40,19 +46,73 @@ extern "C" {
     }
 
     inline void rampsLeftSpindle() {
+#ifndef SPINDLE_Y3675
         WRITE(SPINDLE_DIRECTION_PIN, 1);
+#endif
     }
 
     inline void rampsRightSpindle() {
+#ifndef SPINDLE_Y3675
         WRITE(SPINDLE_DIRECTION_PIN, 0);
+#endif
     }
 
-    inline void rampsStartSpindle() {
+    inline void rampsStartSpindle(uint8_t direction, float rpm) {
+#ifdef SPINDLE_Y3675
+        if (rpm > SPINDLE_MAX_RPM) rpm = SPINDLE_MAX_RPM;
+        uint8_t directionChanged = direction != spindleDirection;
+        uint8_t duty = (rpm / (SPINDLE_MAX_RPM / 10)) + 0.5;
+        int8_t dutyChange = duty - spindleDuty;
+
+        spindleDirection = direction;
+        spindleDuty = duty;
+
+        if (directionChanged || spindleDuty == 0)
+        {
+          WRITE(SPINDLE_STOP_PIN, 0);
+          delay_ms(100);
+          WRITE(SPINDLE_STOP_PIN, 1);
+          delay_ms(100);
+
+          dutyChange = spindleDuty;
+        }
+
+        for (int8_t i = 0; i < dutyChange; ++i)
+        {
+          if (spindleDirection == SPINDLE_ENABLE_CW) WRITE(SPINDLE_UP_PIN, 0);
+          else WRITE(SPINDLE_DOWN_PIN, 0);
+          delay_ms(100);
+          if (spindleDirection == SPINDLE_ENABLE_CW) WRITE(SPINDLE_UP_PIN, 1);
+          else WRITE(SPINDLE_DOWN_PIN, 1);
+          delay_ms(100);
+        }
+        for (int8_t i = dutyChange; i < 0; ++i)
+        {
+          if (spindleDirection == SPINDLE_ENABLE_CW) WRITE(SPINDLE_DOWN_PIN, 0);
+          else WRITE(SPINDLE_UP_PIN, 0);
+          delay_ms(100);
+          if (spindleDirection == SPINDLE_ENABLE_CW) WRITE(SPINDLE_DOWN_PIN, 1);
+          else WRITE(SPINDLE_UP_PIN, 1);
+          delay_ms(100);
+        }
+
+#else
         WRITE(SPINDLE_ENABLE_PIN, 1);
+#endif
     }
 
     inline void rampsStopSpindle() {
+#ifdef SPINDLE_Y3675
+        WRITE(SPINDLE_STOP_PIN, 0);
+        delay_ms(100);
+        WRITE(SPINDLE_STOP_PIN, 1);
+        delay_ms(100);
+
+        spindleDirection = SPINDLE_ENABLE_CW;
+        spindleDuty = 0;
+#else
         WRITE(SPINDLE_ENABLE_PIN, 0);
+#endif
     }
 
     inline void rampsInitCoolant() {
@@ -60,8 +120,17 @@ extern "C" {
     }
 
     inline void rampsInitSpindle() {
+#ifdef SPINDLE_Y3675
+        SET_OUTPUT(SPINDLE_STOP_PIN);
+        SET_OUTPUT(SPINDLE_UP_PIN);
+        SET_OUTPUT(SPINDLE_DOWN_PIN);
+
+        WRITE(SPINDLE_UP_PIN, 1);
+        WRITE(SPINDLE_DOWN_PIN, 1);
+#else
         SET_OUTPUT(SPINDLE_ENABLE_PIN);
         SET_OUTPUT(SPINDLE_DIRECTION_PIN);
+#endif
     }
 
 /**

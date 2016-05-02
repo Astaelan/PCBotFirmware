@@ -36,7 +36,7 @@ extern void rampsInitSteppers();
 extern void rampsWriteDisable(uint8_t value);
 extern void rampsWriteSteps(uint8_t value);
 extern void rampsWriteDirections(uint8_t value);
-extern void rampsStartSpindle();
+extern void rampsStartSpindle(uint8_t direction, float rpm);
 extern void rampsStopSpindle();
 extern void rampsLeftSpindle();
 extern void rampsRightSpindle();
@@ -111,7 +111,7 @@ void spindle_run(uint8_t direction, float rpm) {
 #endif
 #else   
         // SPINDLE_ENABLE_PORT |= (1 << SPINDLE_ENABLE_BIT);
-        rampsStartSpindle();
+        rampsStartSpindle(direction, rpm);
         
 #endif
 
